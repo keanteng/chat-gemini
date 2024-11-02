@@ -9,7 +9,8 @@ import google.generativeai as genai
 load_dotenv()
 
 # Access the API token
-genai.configure(api_key="AIzaSyCBHULh6PcgrFBTZWG-RlhCw3IJlBfuVSE")
+api_token = os.getenv('API_TOKEN')
+genai.configure(api_key=api_token)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Initialize a sample prediction model

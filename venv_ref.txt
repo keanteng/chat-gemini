@@ -1,9 +1,0 @@
-deactivate
-
-myenv/Scripts/activate
-source myenv/Scripts/activate
-
-# first time
-py -m venv myenv
-
-pip install streamlit scikit-learn numpy python-dotenv google-generativeai
