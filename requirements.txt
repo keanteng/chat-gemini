@@ -4,3 +4,4 @@ doteenv
 numpy
 pandas
 scikit-learn
+sqlite3

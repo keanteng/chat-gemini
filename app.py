@@ -1,16 +1,16 @@
 import streamlit as st
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 from sklearn.linear_model import LinearRegression
 import numpy as np
-import google.generativeai as genai
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Access the API token
-api_token = os.getenv('API_TOKEN')
-genai.configure(api_key=api_token)
+api_key = os.getenv('API_TOKEN')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Initialize a sample prediction model
@@ -38,6 +38,26 @@ def get_prediction(input_details):
 
 # Chat interface
 st.title("Chat with Gemini 1.5 Flash")
+
+st.title("Chat with Gemini 1.5 Flash")
+
+# Initialize session state if not already done
+if 'messages' not in st.session_state:
+    st.session_state['messages'] = []
+
+# Create a placeholder for the chat history
+chat_history_placeholder = st.empty()
+
+# Function to update chat history
+def update_chat_history():
+    with chat_history_placeholder.container():
+        for message in st.session_state['messages']:
+            st.write(f"**{message['role']}**: {message['content']}")
+
+# Display the initial chat history
+update_chat_history()
+
+# Chat input
 user_input = st.text_input("You:", key="user_input")
 if user_input:
     st.session_state['messages'].append({"role": "User", "content": user_input})
@@ -62,6 +82,5 @@ if user_input:
         assistant_response = get_gemini_response(user_input)
         st.session_state['messages'].append({"role": "Assistant", "content": assistant_response})
 
-# Display conversation history
-for message in st.session_state['messages']:
-    st.write(f"**{message['role']}**: {message['content']}")
+    # Update the chat history after adding the new message
+    update_chat_history()
