@@ -1,86 +1,56 @@
 import streamlit as st
-import google.generativeai as genai
-from dotenv import load_dotenv
-import os
-from sklearn.linear_model import LinearRegression
-import numpy as np
+import time
+import random
 
-# Load environment variables from .env file
-load_dotenv()
+# side bar setup
+with st.sidebar:
+    st.markdown("An ML Bot Built with Gemini.")
+    st.caption("Kean Teng © 2024")
 
-# Access the API token
-api_key = os.getenv('API_TOKEN')
-genai.configure(api_key=api_key)
-model = genai.GenerativeModel("gemini-1.5-flash")
+# main page
+st.title("⚡ML Bot")
 
-# Initialize a sample prediction model
-sample_model = LinearRegression()
-# Sample training data
-X_train = np.array([[1], [2], [3], [4], [5]])
-y_train = np.array([1, 4, 9, 16, 25])
-sample_model.fit(X_train, y_train)
+# backend functions
 
-# Initialize session state
-if 'messages' not in st.session_state:
-    st.session_state['messages'] = []
+# chat section
+# Streamed response emulator
+def response_generator():
+    response = random.choice(
+        [
+            "Hello there! How can I assist you today?",
+            "Hi, human! Is there anything I can help you with?",
+            "Do you need help?",
+        ]
+    )
+    for word in response.split():
+        yield word + " "
+        time.sleep(0.06)
 
-# Function to get response from Gemini
-def get_gemini_response(user_input):
-    response = model.generate_content(user_input)
-    return response.text
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Function to get prediction
-def get_prediction(input_details):
-    # Convert input details to numpy array for prediction
-    input_array = np.array([[float(input_details)]])
-    prediction = sample_model.predict(input_array)
-    return prediction[0]
+# Display chat messages from history on app rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Chat interface
-st.title("Chat with Gemini 1.5 Flash")
+# Accept user input
+if prompt := st.chat_input("How can ML Bot help you today?"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    # Display user message in chat message container
+    with st.chat_message("user", avatar="https://64.media.tumblr.com/7b526ba246f48e294ebc87fe2cbd8e1b/1a4bdb8275a18adc-c7/s500x750/8f2e5c09cb5513c23798349c7c68013248f0b912.jpg"):
+        st.markdown(prompt)
 
-st.title("Chat with Gemini 1.5 Flash")
-
-# Initialize session state if not already done
-if 'messages' not in st.session_state:
-    st.session_state['messages'] = []
-
-# Create a placeholder for the chat history
-chat_history_placeholder = st.empty()
-
-# Function to update chat history
-def update_chat_history():
-    with chat_history_placeholder.container():
-        for message in st.session_state['messages']:
-            st.write(f"**{message['role']}**: {message['content']}")
-
-# Display the initial chat history
-update_chat_history()
-
-# Chat input
-user_input = st.text_input("You:", key="user_input")
-if user_input:
-    st.session_state['messages'].append({"role": "User", "content": user_input})
-
-    # Check if user requests a prediction
-    if 'prediction' in user_input.lower():
-        st.write("Please provide details for prediction:")
-        with st.form("prediction_form"):
-            input_details = st.text_input("Enter a number:")
-            submitted = st.form_submit_button("Submit")
-            if submitted:
-                prediction_result = get_prediction(input_details)
-                prediction_message = f"The prediction result for the input {input_details} is {prediction_result}."
-                st.session_state['messages'].append({"role": "Assistant", "content": prediction_message})
-                
-                # Relay the prediction result to Gemini
-                gemini_response = get_gemini_response(prediction_message)
-                st.session_state['messages'].append({"role": "Assistant", "content": gemini_response})
-                st.write(f"Gemini Response: {gemini_response}")
-    else:
-        # Get response from Gemini
-        assistant_response = get_gemini_response(user_input)
-        st.session_state['messages'].append({"role": "Assistant", "content": assistant_response})
-
-    # Update the chat history after adding the new message
-    update_chat_history()
+    # Display assistant response in chat message container
+    with st.chat_message("assistant", avatar="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThr7qrIazsvZwJuw-uZCtLzIjaAyVW_ZrlEQ&s"):
+        with st.status("Thinking ...", expanded=True) as status:
+            st.write("Searching for information...")
+            time.sleep(2)
+            status.update(
+                label="Memory Updated", state="complete", expanded=False
+            )
+        response = st.write_stream(response_generator())
+    # Add assistant response to chat history
+    st.session_state.messages.append({"role": "assistant", "content": response})
